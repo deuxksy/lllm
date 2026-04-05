@@ -1,0 +1,10 @@
+# Claude
+.claude/
+
+# Environment
+.env
+*.env
+
+# Secrets
+*.pem
+*.key
