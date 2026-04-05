@@ -10,6 +10,7 @@ services:
       - ./litellm/config.yaml:/app/config.yaml:ro
     environment:
       - ZAI_API_KEY=${ZAI_API_KEY}
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
     command: ["--config", "/app/config.yaml", "--detailed_debug"]
     #command: ["--config", "/app/config.yaml"]
     restart: unless-stopped
