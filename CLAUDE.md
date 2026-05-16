@@ -72,6 +72,12 @@ kubectl get pods -n tailscale  # operator + proxy 파드
 - OAuth client는 Trust credentials 페이지에서 `Devices Core`, `Auth Keys`, `Services` Write + `tag:k8s-operator`로 생성
 - ACL 정책은 `~/git/sylph/policy.hujson`에서 관리 (CI/CD 자동 동기화)
 
+### Tailscale Operator 관리
+```bash
+helm install tailscale-operator tailscale/tailscale-operator -n tailscale --set oauth.clientId=ID --set oauth.clientSecret=SECRET
+```
+- 서비스 5개+ 시 ProxyGroup 전환으로 리소스 절감 가능 (현재는 per-service expose 방식)
+
 ## Gotchas
 - `/v1/responses` API 미지원 — Z.ai/ModelArk 모두 responses 프로토콜 미지원. Aperture에서 `openai chat` 프로토콜만 사용
 - `k8s/secret.yaml`은 `.gitignore`에 있어 첫 배포 전 `sops -d`로 생성 필요
