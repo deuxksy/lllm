@@ -22,12 +22,25 @@ sops -d --input-type dotenv --output-type dotenv compose/.env.encrypted > compos
 ### Secret 암호화 (변경 시)
 ```bash
 sops -e --input-type dotenv --output-type dotenv --age age1qw643dna4spaup6sr5ap0jf039ncjd54e8ekvrfy6p6x96ys2y4qn5vcsy compose/.env > compose/.env.encrypted
-sops -e --age age1qw643dna4spaup6sr5ap0jf039ncjd54e8ekvrfy6p6p6x96ys2y4qn5vcsy k8s/secret.yaml > k8s/secret.enc.yaml
+sops -e --age age1qw643dna4spaup6sr5ap0jf039ncjd54e8ekvrfy6p6x96ys2y4qn5vcsy k8s/secret.yaml > k8s/secret.enc.yaml
 ```
 
 ### 확인
 ```bash
 curl http://lllm.bun-bull.ts.net:4000/v1/models -H "Authorization: Bearer sk-litellm-20260516"
+```
+
+### 모델 추가/수정
+1. `compose/litellm/config.yaml` 수정
+2. `k8s/configmap.yaml`에도 동일 반영 (두 파일은 수동 동기화)
+3. Compose: `docker compose -f compose/compose.yml restart`
+4. K8s: `kubectl apply -k k8s/` (ConfigMap 변경 시 파드 재시작 필요 — `kubectl rollout restart deployment litellm -n lllm`)
+
+### K8s 디버깅
+```bash
+kubectl get pods -n lllm -o wide
+kubectl logs -n lllm -l app=litellm --tail=50
+kubectl get pods -n tailscale  # operator + proxy 파드
 ```
 
 ## Architecture
