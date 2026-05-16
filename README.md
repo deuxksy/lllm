@@ -2,6 +2,24 @@
 
 LiteLLM 기반 LLM 프록시. 여러 프로바이더를 단일 엔드포인트로 통합.
 
+## 프로젝트 구조
+
+```text
+lllm/
+├── compose.yml              # Docker Compose 설정
+├── litellm/
+│   └── config.yaml          # LiteLLM 모델 설정
+├── k8s/                     # Kubernetes 매니페스트
+│   ├── namespace.yaml
+│   ├── configmap.yaml
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── secret.enc.yaml      # SOPS 암호화된 Secret
+│   └── kustomization.yaml
+├── .env.encrypted           # SOPS 암호화된 환경변수
+└── .sops.yaml               # SOPS 설정 (age 키)
+```
+
 ## 모델 목록
 
 ### Z.ai (Primary)
@@ -10,7 +28,7 @@ LiteLLM 기반 LLM 프록시. 여러 프로바이더를 단일 엔드포인트�
 ### ModelArk
 - dola-seed-2.0-pro, dola-seed-2.0-lite, dola-seed-2.0-code
 - bytedance-seed-code, kimi-k2.5, gpt-oss-120b
-- glm-5.1, glm-4.7 (Z.ai fallback)
+- glm-5.1, glm-4.7 (Z.ai fallback, priority 2)
 
 ### Local
 - qwen3-vl-4b (eve:58081), qwen3.5-4b (girl:58081)
@@ -28,11 +46,8 @@ sops -d --input-type dotenv --output-type dotenv .env.encrypted > .env && docker
 ### Kubernetes
 
 ```bash
-# 1. Secret 복호화 후 적용
-sops -d k8s/secret.enc.yaml | kubectl apply -f -
-
-# 2. 나머지 리소스 적용
-kubectl apply -k k8s/
+# Secret 복호화 후 전체 적용
+sops -d k8s/secret.enc.yaml > k8s/secret.yaml && kubectl apply -k k8s/
 ```
 
 ## API 사용
@@ -47,3 +62,5 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{"model":"kimi-k2.5","messages":[{"role":"user","content":"hi"}]}'
 ```
+
+> `/v1/responses`는 ModelArk/Z.ai 미지원. Chat Completions만 사용 가능.
