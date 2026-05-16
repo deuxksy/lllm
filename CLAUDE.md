@@ -59,13 +59,20 @@ kubectl get pods -n tailscale  # operator + proxy 파드
 - SOPS + age로 암호화. age 키는 `~/.config/sops/age/keys.txt`
 - 평문 `.env`, `k8s/secret.yaml`은 `.gitignore` 제외
 - `.sops.yaml`에 파일별 creation_rules 정의
+- `sops exec-env`는 dotenv 포맷 미인식 — 반드시 2단계로 복호화 (`sops -d > .env && docker compose up`)
 
 ### K8s 리소스
 - Service에 `tailscale.com/expose: "true"`, `tailscale.com/hostname: "lllm"` annotation으로 Tailscale 노출
 - 헬스체크는 TCP 프로브 사용 (LiteLLM `/health`가 master key 인증 필요)
 - 메모리 limit 1Gi (512Mi에서 OOMKilled 이력)
+- OrbStack NodePort는 localhost(127.0.0.1)에만 바인딩 — Tailscale 외부 접근 불가
 
 ### Tailscale ACL 요구사항
 - `tag:k8s-operator`가 `tag:k8s`의 owner여야 함 (`tagOwners`에 `"tag:k8s": ["tag:k8s-operator"]`)
 - OAuth client는 Trust credentials 페이지에서 `Devices Core`, `Auth Keys`, `Services` Write + `tag:k8s-operator`로 생성
 - ACL 정책은 `~/git/sylph/policy.hujson`에서 관리 (CI/CD 자동 동기화)
+
+## Gotchas
+- `/v1/responses` API 미지원 — Z.ai/ModelArk 모두 responses 프로토콜 미지원. Aperture에서 `openai chat` 프로토콜만 사용
+- `k8s/secret.yaml`은 `.gitignore`에 있어 첫 배포 전 `sops -d`로 생성 필요
+- K8s namespace 삭제 시 Tailscale finalizer가 stuck될 수 있음 — `kubectl replace --raw .../finalize`로 강제 제거
