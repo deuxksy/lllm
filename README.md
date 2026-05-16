@@ -53,10 +53,7 @@ sops -d k8s/secret.enc.yaml > k8s/secret.yaml && kubectl apply -k k8s/
 ## API 사용
 
 ```bash
-# Docker Compose
-curl http://localhost:4000/v1/models -H "Authorization: Bearer sk-litellm-20260516"
-
-# Kubernetes (Tailscale)
+# 모델 목록
 curl http://axiom:32400/v1/models -H "Authorization: Bearer sk-litellm-20260516"
 
 # Chat Completions
