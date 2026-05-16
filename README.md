@@ -15,11 +15,29 @@ LiteLLM 기반 LLM 프록시. 여러 프로바이더를 단일 엔드포인트�
 ### Local
 - qwen3-vl-4b (eve:58081), qwen3.5-4b (girl:58081)
 
-## 실행
+## 배포
+
+Secret은 SOPS + age로 암호화하여 git에 관리. 평문 `.env`, `k8s/secret.yaml`은 `.gitignore`에 제외.
+
+### Docker Compose
 
 ```bash
-# .env 파일 확인 후
+# Secret 복호화 후 바로 실행
+sops exec-env .env.encrypted "docker compose up -d"
+
+# 또는 복호화해서 .env 생성 후 실행
+sops -d --input-type dotenv --output-type dotenv .env.encrypted > .env
 docker compose up -d
+```
+
+### Kubernetes
+
+```bash
+# 1. Secret 복호화 후 적용
+sops -d k8s/secret.enc.yaml | kubectl apply -f -
+
+# 2. 나머지 리소스 적용
+kubectl apply -k k8s/
 ```
 
 ## API 사용
