@@ -6,9 +6,11 @@ LiteLLM 기반 LLM 프록시. 여러 프로바이더를 단일 엔드포인트�
 
 ```text
 lllm/
-├── compose.yml              # Docker Compose 설정
-├── litellm/
-│   └── config.yaml          # LiteLLM 모델 설정
+├── compose/                 # Docker Compose
+│   ├── compose.yml
+│   ├── litellm/
+│   │   └── config.yaml
+│   └── .env.encrypted       # SOPS 암호화된 환경변수
 ├── k8s/                     # Kubernetes 매니페스트
 │   ├── namespace.yaml
 │   ├── configmap.yaml
@@ -16,7 +18,6 @@ lllm/
 │   ├── service.yaml
 │   ├── secret.enc.yaml      # SOPS 암호화된 Secret
 │   └── kustomization.yaml
-├── .env.encrypted           # SOPS 암호화된 환경변수
 └── .sops.yaml               # SOPS 설정 (age 키)
 ```
 
@@ -40,13 +41,12 @@ Secret은 SOPS + age로 암호화하여 git에 관리. 평문 `.env`, `k8s/secre
 ### Docker Compose
 
 ```bash
-sops -d --input-type dotenv --output-type dotenv .env.encrypted > .env && docker compose up -d
+sops -d --input-type dotenv --output-type dotenv compose/.env.encrypted > compose/.env && docker compose -f compose/compose.yml up -d
 ```
 
 ### Kubernetes
 
 ```bash
-# Secret 복호화 후 전체 적용
 sops -d k8s/secret.enc.yaml > k8s/secret.yaml && kubectl apply -k k8s/
 ```
 

@@ -1,6 +1,10 @@
 # Claude
 .claude/
 
+# OMC
+.omc/
+.remember/
+
 # Environment (plain text - use .env.encrypted)
 .env
 k8s/secret.yaml
