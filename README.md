@@ -2,25 +2,6 @@
 
 LiteLLM 기반 LLM 프록시. 여러 프로바이더를 단일 엔드포인트로 통합.
 
-## 프로젝트 구조
-
-```text
-lllm/
-├── compose/                 # Docker Compose
-│   ├── compose.yml
-│   ├── litellm/
-│   │   └── config.yaml
-│   └── .env.encrypted       # SOPS 암호화된 환경변수
-├── k8s/                     # Kubernetes 매니페스트
-│   ├── namespace.yaml
-│   ├── configmap.yaml
-│   ├── deployment.yaml
-│   ├── service.yaml
-│   ├── secret.enc.yaml      # SOPS 암호화된 Secret
-│   └── kustomization.yaml
-└── .sops.yaml               # SOPS 설정 (age 키)
-```
-
 ## 모델 목록
 
 ### Z.ai (Primary)
@@ -52,13 +33,23 @@ sops -d k8s/secret.enc.yaml > k8s/secret.yaml && kubectl apply -k k8s/
 
 ## API 사용
 
+Tailscale 네트워크에서 `lllm.bun-bull.ts.net:4000`으로 접속.
+
 ```bash
 # 모델 목록
-curl http://axiom:32400/v1/models -H "Authorization: Bearer sk-litellm-20260516"
+curl http://lllm.bun-bull.ts.net:4000/v1/models -H "Authorization: Bearer sk-litellm-20260516"
 
 # Chat Completions
-curl http://axiom:32400/v1/chat/completions \
+curl http://lllm.bun-bull.ts.net:4000/v1/chat/completions \
   -H "Authorization: Bearer sk-litellm-20260516" \
   -H "Content-Type: application/json" \
   -d '{"model":"kimi-k2.5","messages":[{"role":"user","content":"hi"}]}'
+```
+
+## Aperture 설정
+
+```
+Base URL: http://lllm.bun-bull.ts.net:4000/v1
+API Key: sk-litellm-20260516
+Protocol: openai chat
 ```
