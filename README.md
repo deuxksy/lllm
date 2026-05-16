@@ -22,10 +22,6 @@ Secret은 SOPS + age로 암호화하여 git에 관리. 평문 `.env`, `k8s/secre
 ### Docker Compose
 
 ```bash
-# Secret 복호화 후 바로 실행
-sops exec-env .env.encrypted "docker compose up -d"
-
-# 또는 복호화해서 .env 생성 후 실행
 sops -d --input-type dotenv --output-type dotenv .env.encrypted > .env
 docker compose up -d
 ```
