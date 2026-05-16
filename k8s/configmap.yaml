@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: litellm-config
+  namespace: lllm
+data:
+  config.yaml: |
+    model_list:
+      # Z.ai models (primary)
+      - model_name: glm-5.1
+        litellm_params:
+          model: openai/glm-5.1
+          api_key: os.environ/ZAI_API_KEY
+          api_base: https://api.z.ai/api/coding/paas/v4
+          priority: 1
+      - model_name: glm-5-turbo
+        litellm_params:
+          model: openai/glm-5-turbo
+          api_key: os.environ/ZAI_API_KEY
+          api_base: https://api.z.ai/api/coding/paas/v4
+      - model_name: glm-5
+        litellm_params:
+          model: openai/glm-5
+          api_key: os.environ/ZAI_API_KEY
+          api_base: https://api.z.ai/api/coding/paas/v4
+      - model_name: glm-4.7
+        litellm_params:
+          model: openai/glm-4.7
+          api_key: os.environ/ZAI_API_KEY
+          api_base: https://api.z.ai/api/coding/paas/v4
+          priority: 1
+      - model_name: glm-4.5-air
+        litellm_params:
+          model: openai/glm-4.5-air
+          api_key: os.environ/ZAI_API_KEY
+          api_base: https://api.z.ai/api/coding/paas/v4
+
+      # ModelArk fallback for shared models
+      - model_name: glm-5.1
+        litellm_params:
+          model: openai/glm-5.1
+          api_key: os.environ/MODELARK_API_KEY
+          api_base: https://ark.ap-southeast.bytepluses.com/api/coding/v3
+          priority: 2
+      - model_name: glm-4.7
+        litellm_params:
+          model: openai/glm-4.7
+          api_key: os.environ/MODELARK_API_KEY
+          api_base: https://ark.ap-southeast.bytepluses.com/api/coding/v3
+          priority: 2
+
+      # ModelArk exclusive models
+      - model_name: dola-seed-2.0-pro
+        litellm_params:
+          model: openai/dola-seed-2.0-pro
+          api_key: os.environ/MODELARK_API_KEY
+          api_base: https://ark.ap-southeast.bytepluses.com/api/coding/v3
+      - model_name: dola-seed-2.0-lite
+        litellm_params:
+          model: openai/dola-seed-2.0-lite
+          api_key: os.environ/MODELARK_API_KEY
+          api_base: https://ark.ap-southeast.bytepluses.com/api/coding/v3
+      - model_name: dola-seed-2.0-code
+        litellm_params:
+          model: openai/dola-seed-2.0-code
+          api_key: os.environ/MODELARK_API_KEY
+          api_base: https://ark.ap-southeast.bytepluses.com/api/coding/v3
+      - model_name: bytedance-seed-code
+        litellm_params:
+          model: openai/bytedance-seed-code
+          api_key: os.environ/MODELARK_API_KEY
+          api_base: https://ark.ap-southeast.bytepluses.com/api/coding/v3
+      - model_name: kimi-k2.5
+        litellm_params:
+          model: openai/kimi-k2.5
+          api_key: os.environ/MODELARK_API_KEY
+          api_base: https://ark.ap-southeast.bytepluses.com/api/coding/v3
+      - model_name: gpt-oss-120b
+        litellm_params:
+          model: openai/gpt-oss-120b
+          api_key: os.environ/MODELARK_API_KEY
+          api_base: https://ark.ap-southeast.bytepluses.com/api/coding/v3
+
+      # Local models
+      - model_name: qwen3-vl-4b
+        litellm_params:
+          model: openai/qwen3-vl-4b
+          api_base: http://eve:58081/v1
+          api_key: sk-dummy
+      - model_name: qwen3.5-4b
+        litellm_params:
+          model: openai/qwen3.5-4b
+          api_base: http://girl:58081/v1
+          api_key: sk-dummy
+
+    general_settings:
+      master_key: os.environ/LITELLM_MASTER_KEY

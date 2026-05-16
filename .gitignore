@@ -1,9 +1,9 @@
 # Claude
 .claude/
 
-# Environment
+# Environment (plain text - use .env.encrypted)
 .env
-*.env
+k8s/secret.yaml
 
 # Secrets
 *.pem

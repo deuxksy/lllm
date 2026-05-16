@@ -1,0 +1,12 @@
+keys:
+  - &personal age1qw643dna4spaup6sr5ap0jf039ncjd54e8ekvrfy6p6x96ys2y4qn5vcsy
+
+creation_rules:
+  - path_regex: ^\.env\.encrypted$
+    key_groups:
+      - age:
+          - age1qw643dna4spaup6sr5ap0jf039ncjd54e8ekvrfy6p6x96ys2y4qn5vcsy
+  - path_regex: ^k8s/secret\.enc\.yaml$
+    key_groups:
+      - age:
+          - age1qw643dna4spaup6sr5ap0jf039ncjd54e8ekvrfy6p6x96ys2y4qn5vcsy
