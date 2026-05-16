@@ -62,5 +62,3 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{"model":"kimi-k2.5","messages":[{"role":"user","content":"hi"}]}'
 ```
-
-> `/v1/responses`는 ModelArk/Z.ai 미지원. Chat Completions만 사용 가능.
