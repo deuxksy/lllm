@@ -53,11 +53,14 @@ sops -d k8s/secret.enc.yaml > k8s/secret.yaml && kubectl apply -k k8s/
 ## API 사용
 
 ```bash
-# 모델 목록
+# Docker Compose
 curl http://localhost:4000/v1/models -H "Authorization: Bearer sk-litellm-20260516"
 
+# Kubernetes (Tailscale)
+curl http://axiom:32400/v1/models -H "Authorization: Bearer sk-litellm-20260516"
+
 # Chat Completions
-curl http://localhost:4000/v1/chat/completions \
+curl http://axiom:32400/v1/chat/completions \
   -H "Authorization: Bearer sk-litellm-20260516" \
   -H "Content-Type: application/json" \
   -d '{"model":"kimi-k2.5","messages":[{"role":"user","content":"hi"}]}'
