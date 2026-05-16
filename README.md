@@ -22,8 +22,7 @@ Secret은 SOPS + age로 암호화하여 git에 관리. 평문 `.env`, `k8s/secre
 ### Docker Compose
 
 ```bash
-sops -d --input-type dotenv --output-type dotenv .env.encrypted > .env
-docker compose up -d
+sops -d --input-type dotenv --output-type dotenv .env.encrypted > .env && docker compose up -d
 ```
 
 ### Kubernetes
