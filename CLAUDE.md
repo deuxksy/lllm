@@ -69,16 +69,30 @@ kubectl get pods -n tailscale  # operator + proxy 파드
 
 ### Tailscale ACL 요구사항
 - `tag:k8s-operator`가 `tag:k8s`의 owner여야 함 (`tagOwners`에 `"tag:k8s": ["tag:k8s-operator"]`)
-- OAuth client는 Trust credentials 페이지에서 `Devices Core`, `Auth Keys`, `Services` Write + `tag:k8s-operator`로 생성
+- OAuth client는 Trust credentials 페이지에서 `Devices Core`, `Auth Keys`, `Services` Write + Tags: `tag:k8s-operator`, `tag:k8s` 할당 필수
+  - 태그 누락: 400 "requested tags are invalid or not permitted"
+  - Scope 누락: 403 "calling actor does not have enough permissions"
 - ACL 정책은 `~/git/sylph/policy.hujson`에서 관리 (CI/CD 자동 동기화)
 
 ### Tailscale Operator 관리
 ```bash
 helm install tailscale-operator tailscale/tailscale-operator -n tailscale --set oauth.clientId=ID --set oauth.clientSecret=SECRET
 ```
+
+### 완전 삭제 후 재설치
+```bash
+kubectl delete namespace lllm tailscale --force --grace-period=0
+# finalizer stuck 시: kubectl replace --raw /api/v1/namespaces/NAME/finalize -f <(kubectl get namespace NAME -o json | jq '.spec.finalizers = []')
+helm uninstall tailscale-operator -n tailscale  # namespace 삭제 후에도 release 잔존
+helm install tailscale-operator tailscale/tailscale-operator -n tailscale --create-namespace --set oauth.clientId=ID --set oauth.clientSecret=SECRET
+sops -d k8s/secret.enc.yaml > k8s/secret.yaml && kubectl apply -k k8s/
+```
+
 - 서비스 5개+ 시 ProxyGroup 전환으로 리소스 절감 가능 (현재는 per-service expose 방식)
 
 ## Gotchas
 - `/v1/responses` API 미지원 — Z.ai/ModelArk 모두 responses 프로토콜 미지원. Aperture에서 `openai chat` 프로토콜만 사용
 - `k8s/secret.yaml`은 `.gitignore`에 있어 첫 배포 전 `sops -d`로 생성 필요
 - K8s namespace 삭제 시 Tailscale finalizer가 stuck될 수 있음 — `kubectl replace --raw .../finalize`로 강제 제거
+- Tailscale Admin에서 이전 오프라인 머신 삭제 후 프록시 StatefulSet + identity secret(`ts-litellm-*-0`) 삭제해야 hostname이 깔끔하게 재등록됨
+- Helm release는 namespace 삭제 후에도 잔존 — 반드시 `helm uninstall` 별도 실행
