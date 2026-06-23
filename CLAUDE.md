@@ -11,7 +11,7 @@ Tailscale K8s Operator로 `lllm.bun-bull.ts.net:4000` 노출.
 
 ### 배포 (K8s — 운영)
 ```bash
-sops -d k8s/secret.enc.yaml > k8s/secret.yaml && kubectl apply -k k8s/
+sops -d k8s/secret.enc.yaml > k8s/secret.yaml && kubectl --context orbstack apply -k k8s/
 ```
 
 ### 배포 (Docker Compose — 로컬)
@@ -34,19 +34,19 @@ curl http://lllm.bun-bull.ts.net:4000/v1/models -H "Authorization: Bearer sk-lit
 1. `compose/litellm/config.yaml` 수정
 2. `k8s/configmap.yaml`에도 동일 반영 (두 파일은 수동 동기화)
 3. Compose: `docker compose -f compose/compose.yml restart`
-4. K8s: `kubectl apply -k k8s/` (ConfigMap 변경 시 파드 재시작 필요 — `kubectl rollout restart deployment litellm -n lllm`)
+4. K8s: `kubectl --context orbstack apply -k k8s/` (ConfigMap 변경 시 파드 재시작 필요 — `kubectl --context orbstack rollout restart deployment litellm -n lllm`)
 
 ### K8s 디버깅
 ```bash
-kubectl get pods -n lllm -o wide
-kubectl logs -n lllm -l app=litellm --tail=50
-kubectl get pods -n tailscale  # operator + proxy 파드
+kubectl --context orbstack get pods -n lllm -o wide
+kubectl --context orbstack logs -n lllm -l app=litellm --tail=50
+kubectl --context orbstack get pods -n tailscale  # operator + proxy 파드
 ```
 
 ## Architecture
 
 ### 모델 라우팅
-- **Z.ai** (priority 1): glm-5.1, glm-5-turbo, glm-5, glm-4.7, glm-4.5-air
+- **Z.ai** (priority 1): glm-5.2, glm-5.2[1m], glm-5.1, glm-5-turbo, glm-5, glm-4.7, glm-4.5-air
 - **ModelArk** (priority 2 fallback): glm-5.1, glm-4.7 + 전용 6개 (dola-seed-2.0-pro/lite/code, bytedance-seed-code, kimi-k2.5, gpt-oss-120b)
 - **Local**: qwen3-vl-4b (eve), qwen3.5-4b (girl)
 - 동일 model_name의 priority로 Z.ai → ModelArk 자동 폴백
@@ -76,16 +76,17 @@ kubectl get pods -n tailscale  # operator + proxy 파드
 
 ### Tailscale Operator 관리
 ```bash
-helm install tailscale-operator tailscale/tailscale-operator -n tailscale --set oauth.clientId=ID --set oauth.clientSecret=SECRET
+helm --kube-context orbstack install tailscale-operator tailscale/tailscale-operator -n tailscale --set oauth.clientId=ID --set oauth.clientSecret=SECRET
 ```
 
 ### 완전 삭제 후 재설치
 ```bash
-kubectl delete namespace lllm tailscale --force --grace-period=0
-# finalizer stuck 시: kubectl replace --raw /api/v1/namespaces/NAME/finalize -f <(kubectl get namespace NAME -o json | jq '.spec.finalizers = []')
-helm uninstall tailscale-operator -n tailscale  # namespace 삭제 후에도 release 잔존
-helm install tailscale-operator tailscale/tailscale-operator -n tailscale --create-namespace --set oauth.clientId=ID --set oauth.clientSecret=SECRET
-sops -d k8s/secret.enc.yaml > k8s/secret.yaml && kubectl apply -k k8s/
+# 모든 kubectl/helm 명령에 orbstack context 필수 (기본 context는 ecoai.dxai.kr)
+kubectl --context orbstack delete namespace lllm tailscale --force --grace-period=0
+# finalizer stuck 시: kubectl --context orbstack replace --raw /api/v1/namespaces/NAME/finalize -f <(kubectl --context orbstack get namespace NAME -o json | jq '.spec.finalizers = []')
+helm --kube-context orbstack uninstall tailscale-operator -n tailscale  # namespace 삭제 후에도 release 잔존
+helm --kube-context orbstack install tailscale-operator tailscale/tailscale-operator -n tailscale --create-namespace --set oauth.clientId=ID --set oauth.clientSecret=SECRET
+sops -d k8s/secret.enc.yaml > k8s/secret.yaml && kubectl --context orbstack apply -k k8s/
 ```
 
 - 서비스 5개+ 시 ProxyGroup 전환으로 리소스 절감 가능 (현재는 per-service expose 방식)
@@ -93,6 +94,7 @@ sops -d k8s/secret.enc.yaml > k8s/secret.yaml && kubectl apply -k k8s/
 ## Gotchas
 - `/v1/responses` API 미지원 — Z.ai/ModelArk 모두 responses 프로토콜 미지원. Aperture에서 `openai chat` 프로토콜만 사용
 - `k8s/secret.yaml`은 `.gitignore`에 있어 첫 배포 전 `sops -d`로 생성 필요
-- K8s namespace 삭제 시 Tailscale finalizer가 stuck될 수 있음 — `kubectl replace --raw .../finalize`로 강제 제거
+- KUBECONFIG가 `~/.kube/config:~/.kube/ecoai.config`로 다중 context 설정 — 기본 context는 `ecoai.dxai.kr`(외부 운영). OrbStack 배포 시 반드시 `kubectl --context orbstack` 명시 (실수로 ecoai에 배포 방지)
+- K8s namespace 삭제 시 Tailscale finalizer가 stuck될 수 있음 — `kubectl --context orbstack replace --raw .../finalize`로 강제 제거
 - Tailscale Admin에서 이전 오프라인 머신 삭제 후 프록시 StatefulSet + identity secret(`ts-litellm-*-0`) 삭제해야 hostname이 깔끔하게 재등록됨
-- Helm release는 namespace 삭제 후에도 잔존 — 반드시 `helm uninstall` 별도 실행
+- Helm release는 namespace 삭제 후에도 잔존 — 반드시 `helm --kube-context orbstack uninstall` 별도 실행
