@@ -103,6 +103,11 @@ data:
           model: openai/qwen3.5-4b
           api_base: http://girl:58081/v1
           api_key: sk-dummy
+      - model_name: google/gemma-4-26b-a4b-qat
+        litellm_params:
+          model: openai/mlx-community/gemma-4-26b-a4b-it-4bit
+          api_base: http://host.docker.internal:8080/v1
+          api_key: sk-dummy
 
     general_settings:
       master_key: os.environ/LITELLM_MASTER_KEY
