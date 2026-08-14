@@ -27,7 +27,35 @@ sops -e --age age1qw643dna4spaup6sr5ap0jf039ncjd54e8ekvrfy6p6x96ys2y4qn5vcsy k8s
 
 ### 확인
 ```bash
-curl http://lllm.bun-bull.ts.net:4000/v1/models -H "Authorization: Bearer sk-litellm-20260516"
+set -a
+source compose/.env
+set +a
+curl http://lllm.bun-bull.ts.net:4000/v1/models -H "Authorization: Bearer ${LITELLM_MASTER_KEY}"
+```
+
+### MLX Gemma 서버 (로컬)
+```bash
+APC_ENABLED=1 \
+APC_BLOCK_SIZE=16 \
+APC_NUM_BLOCKS=4096 \
+APC_EXACT_CACHE_ENTRIES=8 \
+mlx_vlm.server \
+  --model lmstudio-community/gemma-4-12B-it-MLX-4bit \
+  --host 0.0.0.0 \
+  --port 8080 \
+  --max-kv-size 131072
+```
+
+- `MAX_KV_SIZE`는 `prompt_tokens + max_tokens` 전체 한도다.
+- Hermes는 `context_length: 131072`, `max_tokens: 65536`으로 맞춘다.
+- APC는 기본 비활성화다. 현재 Gemma는 exact-cache path를 사용하며 최근 prompt snapshot을 최대 8개 유지한다.
+- `APC_NUM_BLOCKS`는 block-cache 호환 모델의 최대 65,536-token pool 설정이다.
+- APC는 process 재시작 시 초기화되므로 첫 요청은 cold request다.
+- 반복 요청은 `/v1/cache/stats`의 `exact_hits` 증가로 확인한다. Hermes usage에는 `cached_tokens`가 전달되지 않을 수 있다.
+
+```bash
+curl http://127.0.0.1:8080/health
+curl http://127.0.0.1:8080/v1/cache/stats
 ```
 
 ### 모델 추가/수정
@@ -48,7 +76,7 @@ kubectl --context orbstack get pods -n tailscale  # operator + proxy 파드
 ### 모델 라우팅
 - **Z.ai** (priority 1): glm-5.2, glm-5.2[1m], glm-5.1, glm-5-turbo, glm-5, glm-4.7, glm-4.5-air
 - **ModelArk** (priority 2 fallback): glm-5.1, glm-4.7 + 전용 6개 (dola-seed-2.0-pro/lite/code, bytedance-seed-code, kimi-k2.5, gpt-oss-120b)
-- **Local**: qwen3-vl-4b (eve), qwen3.5-4b (girl)
+- **Local**: qwen3-vl-4b (eve), qwen3.5-4b (girl), google/gemma-4-12b-it (Mac MLX)
 - 동일 model_name의 priority로 Z.ai → ModelArk 자동 폴백
 
 ### 두 배포 경로
@@ -80,6 +108,9 @@ helm --kube-context orbstack install tailscale-operator tailscale/tailscale-oper
 ```
 
 ### 완전 삭제 후 재설치
+
+> namespace와 Helm release를 삭제하는 작업이다. 대상 확인과 사용자 승인 후에만 실행한다.
+
 ```bash
 # 모든 kubectl/helm 명령에 orbstack context 필수 (기본 context는 ecoai.dxai.kr)
 kubectl --context orbstack delete namespace lllm tailscale --force --grace-period=0
