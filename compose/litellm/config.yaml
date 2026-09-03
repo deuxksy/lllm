@@ -15,7 +15,11 @@ model_list:
       model: openai/lmstudio-community/gemma-4-12B-it-MLX-4bit
       api_base: http://host.docker.internal:8080/v1
       api_key: sk-dummy
-
+  - model_name: qwen3.8-27b
+    litellm_params:
+      model: openai/qwen3.8-27b
+      api_base: http://keco-train-02.bun-bull.ts.net:8000/v1
+      api_key: os.environ/VLLM_API_KEY
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY

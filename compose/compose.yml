@@ -1,6 +1,6 @@
 services:
   litellm:
-    image: ghcr.io/berriai/litellm:main-latest
+    image: ghcr.io/berriai/litellm:v1.98.0
     container_name: litellm
     ports:
       - "32400:4000"
@@ -8,6 +8,7 @@ services:
       - ./litellm/config.yaml:/app/config.yaml:ro
     environment:
       - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+      - VLLM_API_KEY=${VLLM_API_KEY}
     command: ["--config", "/app/config.yaml", "--detailed_debug"]
     #command: ["--config", "/app/config.yaml"]
     restart: unless-stopped
